@@ -1,37 +1,40 @@
 package com.sber.demo;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import io.swagger.v3.core.util.Json;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.omg.CORBA.NameValuePair;
-import org.springframework.http.HttpEntity;
+import net.minidev.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.boot.json.GsonJsonParser;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
-import javax.net.ssl.HttpsURLConnection;
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.ProtocolException;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.List;
+
 
 @Tag(name="Основные запросы", description="Здесь представлены основные методы для взаимодействия")
 @RestController
 public class Controller {
-    private static final String SUCCESS_STATUS = "success";
+    Logger logger = LoggerFactory.getLogger(Controller.class);
 
-    private static final String IP = "http://localhost:8080";
+    private static final String IP = "http://82.146.61.94:8081";
 
     private String getJsonStringFromServer(String uri) {
         StringBuilder result = new StringBuilder();
         try {
+            logger.info(uri);
             URL url = new URL(uri);
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
             conn.setRequestMethod("GET");
+            conn.setRequestProperty("Accept", "*/*");
+            logger.info(conn.getResponseCode() + "");
             BufferedReader rd = new BufferedReader(new InputStreamReader(conn.getInputStream()));
             String line;
             while ((line = rd.readLine()) != null) {
@@ -49,10 +52,11 @@ public class Controller {
             summary = "Получить объект пользователя по ID",
             description = "Возвращает JSON строку с полями объекта класса User с уникальным ID"
     )
-    @RequestMapping(value = "/api/user/{id}", method = RequestMethod.GET, produces = "application/json")
+
+    @RequestMapping(value = "/api/user/{id}", produces = "application/json", method = RequestMethod.GET)
     @ResponseBody()
     public String getUser(@PathVariable("id") int id) {
-        return getJsonStringFromServer(IP + "/users/" + id);
+        return getJsonStringFromServer(IP + "/users/user." + id);
     }
 
     @Operation(
@@ -65,14 +69,22 @@ public class Controller {
         return getJsonStringFromServer(IP + "/users/");
     }
 
-    @PostMapping(value = "/api/questions/{json}", consumes = "application/json")
-    public void setLongQuestion(@PathVariable("json") String json) {
-        String url = IP + "questions/";
+    @Operation(
+            summary = "Отправить JSON файл с помощью POST",
+            description = "Отправляет JSON файл"
+    )
+    @PostMapping(value = "/api/users/create", consumes = "application/json")
+    public void createUser(@RequestBody String json) {
+        String url = IP + "/users";
 
-        HttpsURLConnection httpClient = null;
+        logger.info(json);
+
+        HttpURLConnection httpClient = null;
+        StringBuilder result = new StringBuilder();
         try {
-            httpClient = (HttpsURLConnection) new URL(url).openConnection();
+            httpClient = (HttpURLConnection) new URL(url).openConnection();
             httpClient.setRequestMethod("POST");
+            httpClient.setRequestProperty("Content-Type", "application/json");
 
             httpClient.setDoOutput(true);
             try (DataOutputStream wr = new DataOutputStream(httpClient.getOutputStream())) {
@@ -80,13 +92,13 @@ public class Controller {
                 wr.flush();
             }
 
-            BufferedReader in = new BufferedReader(new InputStreamReader(httpClient.getInputStream()));
+            BufferedReader rd = new BufferedReader(new InputStreamReader(httpClient.getInputStream()));
             String line;
-            StringBuilder response = new StringBuilder();
-
-            while ((line = in.readLine()) != null) {
-                response.append(line);
+            while ((line = rd.readLine()) != null) {
+                result.append(line);
             }
+            rd.close();
+            logger.info(result + "");
         } catch (IOException e) {
             e.printStackTrace();
         }

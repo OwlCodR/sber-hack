@@ -22,6 +22,7 @@
             <groupId>org.springframework</groupId>
             <artifactId>spring-webmvc</artifactId>
             <version>5.3.4</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>net.sf.json-lib</groupId>
@@ -51,10 +52,6 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>net.minidev</groupId>
-            <artifactId>json-smart</artifactId>
         </dependency>
         <dependency>
             <groupId>net.minidev</groupId>

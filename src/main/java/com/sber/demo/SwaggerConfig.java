@@ -19,6 +19,7 @@ public class SwaggerConfig {
                             .url("https://github.com/OwlCodR/SberHack")
                             .name("OwlCodR"))
             );
+
     }
 
 }
