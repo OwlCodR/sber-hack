@@ -9,7 +9,6 @@ public class ShortQuestion {
     private int rating;
     private String header;
     private String tags;
-    @Schema(description = "Строка содержимого вопроса. Максимум 40 символов!")
     private String content;
     private String created_by;
     private boolean isSolved;
