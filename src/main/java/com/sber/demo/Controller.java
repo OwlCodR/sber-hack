@@ -108,6 +108,10 @@ public class Controller {
         sendJsonToServer(IP + port + "/users", json, "POST");
     }
 
+
+    @Operation(
+            summary = "Создать объект вопроса",
+            description = "Получает JSON с полями объекта класса Question")
     @PostMapping(value = "/api/questions", produces = "application/json")
     public String setQuestion(@RequestBody String json) {
         String port = "8082";
@@ -117,7 +121,7 @@ public class Controller {
     @Operation(
             summary = "Обновить объект пользователя",
             description = "Принимает JSON с полями объекта класса User")
-    @PutMapping (value = "/api/users", consumes = "application/json")
+    @PutMapping(value = "/api/users", consumes = "application/json")
     public void updateUser(@RequestBody String json) {
         String port = "8081";
         sendJsonToServer(IP + port + "/users", json, "PUT");
@@ -133,12 +137,12 @@ public class Controller {
         return getJsonStringFromServer(IP + port + "/questions/" + id);
     }
 
-
-
+    @Operation(
+            summary = "Обновить объект вопроса",
+            description = "Получает JSON с полями объекта класса Question")
     @PutMapping(value = "/api/questions", produces = "application/json")
     public void updateQuestion(@RequestBody String json) {
         String port = "8082";
         sendJsonToServer(IP + port + "/questions", json, "PUT");
     }
-    //http://localhost:8080/api/questions
 }
