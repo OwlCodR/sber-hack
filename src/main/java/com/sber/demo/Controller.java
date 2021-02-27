@@ -1,29 +1,18 @@
 package com.sber.demo;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import io.swagger.v3.core.util.Json;
+import com.google.gson.Gson;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import net.minidev.json.JSONObject;
-import okhttp3.*;
-import org.apache.commons.lang.StringEscapeUtils;
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.boot.json.GsonJsonParser;
-import org.springframework.http.HttpStatus;
-import org.springframework.lang.Nullable;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.filter.CharacterEncodingFilter;
 
-import javax.servlet.FilterRegistration;
-import java.io.*;
-import java.net.*;
-import java.nio.charset.StandardCharsets;
+import java.io.IOException;
 import java.util.Objects;
-
-import static java.nio.charset.StandardCharsets.*;
 
 
 @Tag(name="Основные запросы", description="Здесь представлены основные методы для взаимодействия")
@@ -35,6 +24,7 @@ public class Controller {
 
     private static final String PORT_USERS = "8081";
     private static final String PORT_QUESTIONS = "8082";
+    private static final String PORT_ARTICLES = "8083";
 
     private static final String GET = "GET";
     private static final String POST = "POST";
@@ -54,7 +44,10 @@ public class Controller {
 
         if (json != null) {
             okhttp3.RequestBody formBody = okhttp3.RequestBody.create(json, MediaType.parse("application/json"));
-            builder.post(formBody);
+            if (requestMethod.equals(POST))
+                builder.post(formBody);
+            else if (requestMethod.equals(PUT))
+                builder.put(formBody);
         }
 
         Request request = builder.build();
@@ -76,32 +69,52 @@ public class Controller {
             description = "Возвращает JSON строку с полями объекта класса User с уникальным ID (Example: user.15)")
     @RequestMapping(value = "/api/users/{id}", produces = "application/json", method = RequestMethod.GET)
     @ResponseBody()
-    public String getUser(@PathVariable("id") int id) {
-        return makeRequest(IP + PORT_USERS + "/users/user." + id, null, GET);
+    public User getUser(@PathVariable("id") int id) {
+        Gson gson = new Gson();
+        return gson.fromJson(makeRequest(IP + PORT_USERS + "/users/user." + id, null, GET), User.class);
     }
 
     @Operation(
             summary = "Создать объект пользователя",
             description = "Принимает JSON с полями объекта класса User")
     @PostMapping(value = "/api/users", consumes = "application/json")
-    public String createUser(@RequestBody String json) {
-        return makeRequest(IP + PORT_USERS + "/users", json, POST);
+    public String createUser(@RequestBody User user) {
+        Gson gson = new Gson();
+        return makeRequest(IP + PORT_USERS + "/users", gson.toJson(user), POST);
     }
 
     @Operation(
             summary = "Обновить объект пользователя",
             description = "Принимает JSON с полями объекта класса User")
     @PutMapping(value = "/api/users", consumes = "application/json")
-    public String updateUser(@RequestBody String json) {
-        return makeRequest(IP + PORT_USERS + "/users", json, PUT);
+    public String updateUser(@RequestBody User user) {
+        Gson gson = new Gson();
+        return makeRequest(IP + PORT_USERS + "/users", gson.toJson(user), PUT);
+    }
+
+    @Operation(
+            summary = "Получить объект статьи",
+            description = "Возврашает JSON с полями объекта класса Article")
+    @RequestMapping(value = "/api/articles/{id}", consumes = "application/json", method = RequestMethod.GET)
+    public String getArticle(@PathVariable("id") int id) {
+        return makeRequest(IP + PORT_ARTICLES + "/articles/" + id, null, GET);
+    }
+
+    @Operation(
+            summary = "Создать объект статьи",
+            description = "Принимает JSON с полями объекта класса Article")
+    @PostMapping(value = "/api/articles", consumes = "application/json")
+    public String createArticle(@RequestBody String json) {
+        return makeRequest(IP + PORT_ARTICLES + "/articles", json, POST);
     }
 
     @Operation(
             summary = "Создать объект вопроса",
             description = "Получает JSON с полями объекта класса Question")
     @PostMapping(value = "/api/questions", produces = "application/json")
-    public String createQuestion(@RequestBody String json) {
-        return makeRequest(IP + PORT_QUESTIONS + "/questions", json, POST);
+    public String createQuestion(@RequestBody Question question) {
+        Gson gson = new Gson();
+        return makeRequest(IP + PORT_QUESTIONS + "/questions", gson.toJson(question), POST);
     }
 
     @Operation(
@@ -109,8 +122,9 @@ public class Controller {
             description = "Возвращает JSON с полями объекта класса Question")
     @RequestMapping(value = "/api/questions/{id}", produces = "application/json", method = RequestMethod.GET)
     @ResponseBody()
-    public String getQuestion(@PathVariable("id") int id) {
-        return makeRequest(IP + PORT_QUESTIONS + "/questions/" + id, null, GET);
+    public Question getQuestion(@PathVariable("id") int id) {
+        Gson gson = new Gson();
+        return gson.fromJson(makeRequest(IP + PORT_QUESTIONS + "/questions/" + id, null, GET), Question.class);
     }
 
     @Operation(
@@ -124,8 +138,25 @@ public class Controller {
     @Operation(
             summary = "Обновить объект вопроса",
             description = "Получает JSON с полями объекта класса Question")
-    @PutMapping(value = "/api/questions", produces = "application/json")
-    public String updateQuestion(@RequestBody String json) {
-        return makeRequest(IP + PORT_QUESTIONS + "/questions", json, PUT);
+    @PutMapping(value = "/api/questions/{id}", produces = "application/json")
+    public String updateQuestion(@PathVariable("id") int id, @RequestBody String json) {
+        return makeRequest(IP + PORT_QUESTIONS + "/questions/" + id, json, PUT);
+    }
+
+    @Operation(
+            summary = "Получить объект ответа",
+            description = "Получает JSON с полями объекта класса Answer")
+    @RequestMapping(value = "/api/answers/{id}", produces = "application/json", method = RequestMethod.GET)
+    @ResponseBody()
+    public String getAnswer(@PathVariable("id") int id, @RequestBody String json) {
+        return makeRequest(IP + PORT_QUESTIONS + "/answers/" + id, json, GET);
+    }
+
+    @Operation(
+            summary = "Получить объект ответа",
+            description = "Получает JSON с полями объекта класса Answer")
+    @PutMapping(value = "/api/answers", produces = "application/json")
+    public String createAnswer(@RequestBody String json) {
+        return makeRequest(IP + PORT_QUESTIONS + "/answers/", json, GET);
     }
 }

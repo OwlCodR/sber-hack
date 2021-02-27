@@ -2,14 +2,36 @@ package com.sber.demo;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
+import java.util.HashMap;
+import java.util.Map;
+
 @Schema(description = "Пользователь")
 public class User {
     private String identifier;
     private String name;
     private String surname;
-    private int rating;
+    @Schema(description = "rating = {\"rating\": int, \"toxicRating\": int}")
+    private Map<String, Integer> rating;
     private boolean is_online;
-    private String skills;
+    private String[] skills;
+
+    public User(String identifier, String name, String surname, Map<String, Integer> rating, boolean is_online, String[] skills) {
+        this.identifier = identifier;
+        this.name = name;
+        this.surname = surname;
+        this.rating = new HashMap<String, Integer>() {{
+            put("rating", 0);
+            put("toxicRating", 0);
+        }};
+        this.is_online = is_online;
+        this.skills = skills;
+    }
+    public User() {
+        this.rating = new HashMap<String, Integer>() {{
+            put("rating", 0);
+            put("toxicRating", 0);
+        }};
+    }
 
     public String getName() {
         return name;
@@ -27,11 +49,11 @@ public class User {
         this.surname = surname;
     }
 
-    public int getRating() {
+    public Map<String, Integer> getRating() {
         return rating;
     }
 
-    public void setRating(int rating) {
+    public void setRating(Map<String, Integer> rating) {
         this.rating = rating;
     }
 
@@ -43,11 +65,11 @@ public class User {
         this.is_online = is_online;
     }
 
-    public String getSkills() {
+    public String[] getSkills() {
         return skills;
     }
 
-    public void setSkills(String skills) {
+    public void setSkills(String[] skills) {
         this.skills = skills;
     }
 
