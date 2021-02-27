@@ -2,16 +2,14 @@ package com.sber.demo;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import net.minidev.json.JSONArray;
-import net.minidev.json.JSONObject;
+import org.omg.CORBA.NameValuePair;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.client.RestTemplate;
 
+import javax.net.ssl.HttpsURLConnection;
 import java.io.BufferedReader;
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
@@ -19,9 +17,7 @@ import java.net.MalformedURLException;
 import java.net.ProtocolException;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @Tag(name="Основные запросы", description="Здесь представлены основные методы для взаимодействия")
 @RestController
@@ -63,18 +59,36 @@ public class Controller {
             summary = "Получить объекты всех пользователей",
             description = "Возвращает JSON строку с полями объектов класса User"
     )
-    @RequestMapping(value = "/api/users/", method = RequestMethod.GET, produces = "application/json")
+    @RequestMapping(value = "/api/users", method = RequestMethod.GET, produces = "application/json")
     @ResponseBody()
     public String getUsers() {
         return getJsonStringFromServer(IP + "/users/");
     }
 
-    @PostMapping("/api/users/")
-    public BaseResponse pay(@RequestParam(value = "key") String key, @RequestBody User user) {
+    @PostMapping(value = "/api/questions/{json}", consumes = "application/json")
+    public void setLongQuestion(@PathVariable("json") String json) {
+        String url = IP + "questions/";
 
-        final BaseResponse response;
-        response = new BaseResponse(SUCCESS_STATUS, HttpStatus.OK);
+        HttpsURLConnection httpClient = null;
+        try {
+            httpClient = (HttpsURLConnection) new URL(url).openConnection();
+            httpClient.setRequestMethod("POST");
 
-        return response;
+            httpClient.setDoOutput(true);
+            try (DataOutputStream wr = new DataOutputStream(httpClient.getOutputStream())) {
+                wr.writeBytes(json);
+                wr.flush();
+            }
+
+            BufferedReader in = new BufferedReader(new InputStreamReader(httpClient.getInputStream()));
+            String line;
+            StringBuilder response = new StringBuilder();
+
+            while ((line = in.readLine()) != null) {
+                response.append(line);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }
