@@ -1,5 +1,8 @@
 package com.sber.demo;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema(description = "Пользователь")
 public class User {
     private String identifier;
     private String name;
