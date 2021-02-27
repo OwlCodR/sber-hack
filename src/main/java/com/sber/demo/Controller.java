@@ -46,7 +46,6 @@ public class Controller {
         logger.info(json);
 
         OkHttpClient httpClient = new OkHttpClient();
-        okhttp3.RequestBody formBody = okhttp3.RequestBody.create(MediaType.parse("application/json"), json);
 
         Request.Builder builder = new Request.Builder()
                 .url(url)
@@ -54,6 +53,7 @@ public class Controller {
                 .addHeader("Accept", "*/*");
 
         if (json != null) {
+            okhttp3.RequestBody formBody = okhttp3.RequestBody.create(json, MediaType.parse("application/json"));
             builder.post(formBody);
         }
 
