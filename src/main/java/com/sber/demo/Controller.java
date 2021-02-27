@@ -11,13 +11,17 @@ import org.slf4j.LoggerFactory;
 import org.springframework.boot.json.GsonJsonParser;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.filter.CharacterEncodingFilter;
 
-import java.io.BufferedReader;
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import javax.servlet.FilterRegistration;
+import java.io.*;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.ProtocolException;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
+
+import static java.nio.charset.StandardCharsets.*;
 
 
 @Tag(name="Основные запросы", description="Здесь представлены основные методы для взаимодействия")
@@ -27,6 +31,50 @@ public class Controller {
 
     private static final String IP = "http://82.146.61.94:";
 
+    private static final String PORT_USERS = "8081";
+    private static final String PORT_QUESTIONS = "8082";
+
+    private static final String GET = "GET";
+    private static final String POST = "POST";
+    private static final String PUT = "PUT";
+
+    private void makeRequest(String url, String json, String requestMethod) {
+        logger.info(url);
+        logger.info(requestMethod);
+        logger.info(json);
+
+        HttpURLConnection httpClient = null;
+        StringBuilder result = new StringBuilder();
+        try {
+            httpClient = (HttpURLConnection) new URL(url).openConnection();
+            httpClient.setRequestMethod(requestMethod);
+            httpClient.setRequestProperty("Content-Type", "application/json");
+            httpClient.setRequestProperty("Accept", "*/*");
+
+            if (json != null) {
+                httpClient.setDoOutput(true);
+                try (DataOutputStream wr = new DataOutputStream(httpClient.getOutputStream())) {
+                    wr.writeBytes(json);
+                    wr.flush();
+                }
+            }
+
+            BufferedReader rd = new BufferedReader(new InputStreamReader(httpClient.getInputStream()));
+            String line;
+            while ((line = rd.readLine()) != null) {
+                result.append(line);
+            }
+            rd.close();
+
+            logger.info(httpClient.getResponseCode() + "");
+
+            logger.info(result.toString());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /*
     private String getJsonStringFromServer(String uri) {
         StringBuilder result = new StringBuilder();
         try {
@@ -34,7 +82,7 @@ public class Controller {
             URL url = new URL(uri);
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
             conn.setRequestMethod("GET");
-            conn.setRequestProperty("Accept", "*/*");
+            conn.setRequestProperty("Accept", "/");
             logger.info(conn.getResponseCode() + "");
             BufferedReader rd = new BufferedReader(new InputStreamReader(conn.getInputStream()));
             String line;
@@ -60,9 +108,9 @@ public class Controller {
             httpClient = (HttpURLConnection) new URL(url).openConnection();
             httpClient.setRequestMethod(requestMethod);
             httpClient.setRequestProperty("Content-Type", "application/json");
-            httpClient.setRequestProperty("Accept", "*/*");
+            httpClient.setRequestProperty("Accept", "");
             httpClient.setRequestProperty("User-Agent", "Mozilla/5.0");
-            //
+
             httpClient.setDoOutput(true);
             try (DataOutputStream wr = new DataOutputStream(httpClient.getOutputStream())) {
                 wr.writeBytes(json);
@@ -88,15 +136,15 @@ public class Controller {
         }
         return "Error";
     }
+    */
 
     @Operation(
             summary = "Получить объект пользователя по ID",
             description = "Возвращает JSON строку с полями объекта класса User с уникальным ID (Example: user.15)")
     @RequestMapping(value = "/api/users/{id}", produces = "application/json", method = RequestMethod.GET)
     @ResponseBody()
-    public String getUser(@PathVariable("id") int id) {
-        String port = "8081";
-        return getJsonStringFromServer(IP + port + "/users/user." + id);
+    public void getUser(@PathVariable("id") int id) {
+        makeRequest(IP + PORT_USERS + "/users/user." + id, null, GET);
     }
 
     @Operation(
@@ -104,18 +152,7 @@ public class Controller {
             description = "Принимает JSON с полями объекта класса User")
     @PostMapping(value = "/api/users", consumes = "application/json")
     public void createUser(@RequestBody String json) {
-        String port = "8081";
-        sendJsonToServer(IP + port + "/users", json, "POST");
-    }
-
-
-    @Operation(
-            summary = "Создать объект вопроса",
-            description = "Получает JSON с полями объекта класса Question")
-    @PostMapping(value = "/api/questions", produces = "application/json")
-    public String setQuestion(@RequestBody String json) {
-        String port = "8082";
-        return sendJsonToServer(IP + port + "/questions", StringEscapeUtils.unescapeHtml(json), "POST");
+        makeRequest(IP + PORT_USERS + "/users", json, POST);
     }
 
     @Operation(
@@ -123,8 +160,15 @@ public class Controller {
             description = "Принимает JSON с полями объекта класса User")
     @PutMapping(value = "/api/users", consumes = "application/json")
     public void updateUser(@RequestBody String json) {
-        String port = "8081";
-        sendJsonToServer(IP + port + "/users", json, "PUT");
+        makeRequest(IP + PORT_USERS + "/users", json, PUT);
+    }
+
+    @Operation(
+            summary = "Создать объект вопроса",
+            description = "Получает JSON с полями объекта класса Question")
+    @PostMapping(value = "/api/questions", produces = "application/json")
+    public void createQuestion(@RequestBody String json) {
+        makeRequest(IP + PORT_QUESTIONS + "/questions", json, POST);
     }
 
     @Operation(
@@ -132,9 +176,16 @@ public class Controller {
             description = "Возвращает JSON с полями объекта класса Question")
     @RequestMapping(value = "/api/questions/{id}", produces = "application/json", method = RequestMethod.GET)
     @ResponseBody()
-    public String getQuestion(@PathVariable("id") int id) {
-        String port = "8082";
-        return getJsonStringFromServer(IP + port + "/questions/" + id);
+    public void getQuestion(@PathVariable("id") int id) {
+        makeRequest(IP + PORT_QUESTIONS + "/questions/" + id, null, GET);
+    }
+
+    @Operation(
+            summary = "Возвращает массив вопросов в формате JSON",
+            description = "Получает JSON с полями фильтров")
+    @GetMapping(value = "/api/questions/filter", produces = "application/json")
+    public void getQuestions(@RequestBody String json) {
+        makeRequest(IP + PORT_QUESTIONS + "/questions/filters", json, GET);
     }
 
     @Operation(
@@ -142,7 +193,6 @@ public class Controller {
             description = "Получает JSON с полями объекта класса Question")
     @PutMapping(value = "/api/questions", produces = "application/json")
     public void updateQuestion(@RequestBody String json) {
-        String port = "8082";
-        sendJsonToServer(IP + port + "/questions", json, "PUT");
+        makeRequest(IP + PORT_QUESTIONS + "/questions", json, PUT);
     }
 }
