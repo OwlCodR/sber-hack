@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.util.Date;
 
+@Schema(description = "Короткий вопрос")
 public class ShortQuestion {
     private int id;
     private int rating;
