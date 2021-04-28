@@ -3,13 +3,12 @@ package com.sber.demo;
 import com.google.gson.Gson;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import okhttp3.MediaType;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.Response;
+import okhttp3.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.io.IOException;
 import java.util.Objects;
@@ -48,6 +47,7 @@ public class Controller {
                 builder.post(formBody);
             else if (requestMethod.equals(PUT))
                 builder.put(formBody);
+            HttpUrl URL A =
         }
 
         Request request = builder.build();
